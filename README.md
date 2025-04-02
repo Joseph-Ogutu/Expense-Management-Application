@@ -35,7 +35,7 @@ INSTALLATION.
 
  1 Clone the repository.
 
-git clone https://github.com/your-username/expense-management-app.git
+git clone https://github.com/Joseph-Ogutu/Expense-Management-Application.git
 cd expense-management-app
 
 2 set up virtual Environment.
