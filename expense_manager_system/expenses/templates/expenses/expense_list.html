@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Your Expenses</h2>
+<form method="get" class="mb-3">
+    <div class="input-group">
+        <input type="text" name="q" class="form-control" placeholder="Search expenses..." value="{{ query }}">
+        <button type="submit" class="btn btn-primary">Search</button>
+    </div>
+    <div class="mt-2">
+        <label for="sort_by" class="form-label">Sort By:</label>
+        <select name="sort_by" id="sort_by" class="form-select">
+            <option value="date" {% if sort_by == 'date' %}selected{% endif %}>Date</option>
+            <option value="amount" {% if sort_by == 'amount' %}selected{% endif %}>Amount</option>
+            <option value="title" {% if sort_by == 'title' %}selected{% endif %}>Title</option>
+        </select>
+    </div>
+    <div class="mt-2">
+        <label for="filter_by" class="form-label">Filter By:</label>
+        <select name="filter_by" id="filter_by" class="form-select">
+            <option value=" ">ALL</option>
+            <option value="Management" {% if filter_by == 'Management' %}selected{% endif %}>Management</option>
+            <option value="Management" {% if filter_by == 'Transport' %}selected{% endif %}>Transport</option>
+            <option value="Management" {% if filter_by == 'Utilities' %}selected{% endif %}>Utilities</option>
+        </select>
+    </div>
+    <button type="submit" class="btn btn-secondary mt-2">Apply</button>
+</from>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Amount</th>
+            <th>Date</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for expense in expenses %}
+        <tr>
+            <td>{{ expense.title }}</td>
+            <td>Ksh{{ expense.Amount }}</td>
+            <td>{{ expense.date }}</td>
+            <td>
+                <a href="{% url 'generate_invoice' expense.id  %}" class="btn btn-sm btn-primary">Invoice</a>
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<!--pagination-->
+<nav aria-label="Page navigation">
+    <ul class="pagination">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?page=1&q={{ query }}&sort_by={{ sort_by }}&filter_by={{ filter_by }}">First</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}&q={{ query }}&sort_by={{ sort_by }}&filter_by={{ filter_by }}">Previous</a>
+        </li>
+        {% endif %}
+        <li class="page-item disabled">
+            <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+        </li>
+        {% if page_obj.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}&q={{ query }}&sort_by={{ sort_by }}&filter_by={{ filter_by }}">Next</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}&q={{ query }}&sort_by={{ sort_by }}&filter_by={{ filter_by }}">Last</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+
+<script>
+    const socket = new WebSocket('ws://' + window.location.host + '/ws/expenses/');
+
+    socket.onmessage = function(event) {
+        const data = JSON.parse(event.data);
+        const tableBody = document.querySelector('#expense-table tbody');
+        const newRow = document.createElement('tr');
+        newRow.innerHTML = `
+        <td>${data.title}</td>
+        <td>${data.amount}</td>
+        <td>${data.date}</td>
+        <td>
+        <a href="/invoice/${data.id}/" class="btn btn-sm btn-primary">Invoice</a>
+        </td>
+        `;
+        tableBody.appendChild(newRow);
+    };
+</script>
+{% endblock %}
